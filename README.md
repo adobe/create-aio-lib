@@ -12,7 +12,10 @@ governing permissions and limitations under the License.
 [![oclif](https://img.shields.io/badge/cli-oclif-brightgreen.svg)](https://oclif.io)
 [![Version](https://img.shields.io/npm/v/@adobe/create-aio-lib.svg)](https://npmjs.org/package/@adobe/create-aio-lib)
 [![Downloads/week](https://img.shields.io/npm/dw/@adobe/create-aio-lib.svg)](https://npmjs.org/package/@adobe/create-aio-lib)
+[![Build Status](https://travis-ci.com/adobe/create-aio-lib.svg?branch=master)](https://travis-ci.com/adobe/create-aio-lib)
 [![License](https://img.shields.io/npm/l/@adobe/create-aio-lib.svg)](https://github.com/adobe/create-aio-lib/blob/master/package.json)
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0) [![Greenkeeper badge](https://badges.greenkeeper.io/adobe/create-aio-lib.svg)](https://greenkeeper.io/)
+[![Codecov Coverage](https://img.shields.io/codecov/c/github/adobe/create-aio-lib/master.svg?style=flat-square)](https://codecov.io/gh/adobe/create-aio-lib/)
 
 @adobe/create-aio-lib
 =====================
