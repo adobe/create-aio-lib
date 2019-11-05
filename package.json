@@ -1,0 +1,50 @@
+{
+  "name": "@adobe/create-aio-lib",
+  "description": "Create an AIO Lib",
+  "version": "1.0.0",
+  "author": "Adobe Inc.",
+  "bin": {
+    "create-aio-lib": "./bin/run"
+  },
+  "bugs": "https://github.com/adobe/create-aio-lib/issues",
+  "dependencies": {
+    "@oclif/command": "^1.5.19",
+    "@oclif/config": "^1.13.3",
+    "@oclif/plugin-help": "^2.2.1",
+    "debug": "^4.1.1",
+    "isomorphic-git": "^0.70.4",
+    "listr": "^0.14.3",
+    "rimraf": "^3.0.0"
+  },
+  "devDependencies": {
+    "@oclif/dev-cli": "^1.22.2",
+    "eslint": "^6",
+    "eslint-config-oclif": "^3.1.0",
+    "eslint-config-standard": "^14.1.0",
+    "eslint-plugin-import": "^2.18.2",
+    "eslint-plugin-node": "^10.0.0",
+    "eslint-plugin-promise": "^4.2.1",
+    "eslint-plugin-standard": "^4.0.1"
+  },
+  "engines": {
+    "node": ">=8.0.0"
+  },
+  "files": [
+    "/bin",
+    "/src"
+  ],
+  "homepage": "https://github.com/adobe/create-aio-lib",
+  "keywords": [
+    "oclif"
+  ],
+  "license": "Apache-2.0",
+  "main": "src/index.js",
+  "oclif": {
+    "bin": "create-aio-lib"
+  },
+  "repository": "adobe/create-aio-lib",
+  "scripts": {
+    "posttest": "eslint .",
+    "test": "echo NO TESTS"
+  }
+}

@@ -1,0 +1,6 @@
+{
+  "extends": [ "oclif", "standard" ],
+  "parserOptions": { 
+    "ecmaVersion": 2018 
+  }
+}
