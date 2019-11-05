@@ -45,7 +45,7 @@
   },
   "repository": "adobe/create-aio-lib",
   "scripts": {
-    "posttest": "eslint .",
-    "test": "echo NO TESTS"
+    "lint": "eslint .",
+    "test": "npm run lint"
   }
 }

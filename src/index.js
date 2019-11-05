@@ -10,12 +10,11 @@ governing permissions and limitations under the License.
 */
 
 const { Command, flags } = require('@oclif/command')
-const execa = require('execa');
-const Listr = require('listr');
+const Listr = require('listr')
 const fse = require('fs-extra')
 const debug = require('debug')('create-aio-lib')
 const path = require('path')
-const git = require('isomorphic-git');
+const git = require('isomorphic-git')
 git.plugins.set('fs', fse)
 
 class CreateAioLibCommand extends Command {
@@ -36,13 +35,13 @@ class CreateAioLibCommand extends Command {
 
     if (fse.pathExistsSync(templateFolder) && !flags.overwrite) {
       this.error(`Destination ${templateFolder} exists, use the '--overwrite' flag to overwrite.`)
-    } 
+    }
 
     const cloneTemplateStep = {
-        task: (ctx, task) => {
-          task.title = `Cloning template from ${ctx.templateUrl}`
-          this.cloneRepo(ctx.templateUrl, ctx.templateFolder)
-        }
+      task: (ctx, task) => {
+        task.title = `Cloning template from ${ctx.templateUrl}`
+        this.cloneRepo(ctx.templateUrl, ctx.templateFolder)
+      }
     }
 
     const steps = [
@@ -51,27 +50,29 @@ class CreateAioLibCommand extends Command {
         task: ctx => this.copyTemplate(ctx.templateFolder, ctx.overwrite)
       },
       {
-        title: "Remove .git folder",
+        title: 'Remove .git folder',
         task: ctx => this.removeDotGitFolder(ctx.templateFolder)
       },
       {
-        title: "Read parameters file",
+        title: 'Read parameters file',
         task: async ctx => {
+          // false positive for eslint rule
+          // eslint-disable-next-line require-atomic-updates
           ctx.paramsJson = await this.readParametersFile(ctx.templateFolder)
         }
       },
       {
-        title: "Update package.json",
+        title: 'Update package.json',
         task: async ctx => {
           await this.updatePackageJson(ctx.templateFolder, ctx.repoName)
         }
       },
       {
-        title: "Replace text",
+        title: 'Replace text',
         task: ctx => this.replaceText(ctx.templateFolder, ctx.paramsJson, ctx.libName, ctx.repoName)
       },
       {
-        title: "Lib Location",
+        title: 'Lib Location',
         task: (ctx, task) => {
           task.title = `Lib created at ${ctx.templateFolder}`
         }
@@ -84,24 +85,24 @@ class CreateAioLibCommand extends Command {
 
     const tasks = new Listr(steps)
     tasks
-    .run({
-      templateUrl: flags.templateUrl,
-      templateFolder,
-      libName,
-      repoName,
-      overwrite: flags.overwrite
-    })
-    .catch(err => {
-      this.error(err.message);
-    })
+      .run({
+        templateUrl: flags.templateUrl,
+        templateFolder,
+        libName,
+        repoName,
+        overwrite: flags.overwrite
+      })
+      .catch(error => {
+        this.error(error.message)
+      })
   }
 
-  async copyTemplate(toFolder, overwrite) {
-      const from = path.join(__dirname, '../node_modules/@adobe/aio-lib-template')
-      fse.copy(from, toFolder, { overwrite, errorOnExist: !overwrite })
+  async copyTemplate (toFolder, overwrite) {
+    const from = path.join(__dirname, '../node_modules/@adobe/aio-lib-template')
+    fse.copy(from, toFolder, { overwrite, errorOnExist: !overwrite })
   }
 
-  async cloneRepo(url, toFolder) {
+  async cloneRepo (url, toFolder) {
     const cloneOptions = {
       dir: toFolder,
       url: url,
@@ -113,31 +114,31 @@ class CreateAioLibCommand extends Command {
     await git.clone(cloneOptions)
   }
 
-  async removeDotGitFolder(repoFolder) {
+  async removeDotGitFolder (repoFolder) {
     // remove .git folder
     const dotGitFolder = path.join(repoFolder, '.git')
     try {
       await fse.remove(dotGitFolder)
       debug(`Removed .git folder at ${dotGitFolder}`)
-    } catch (err) {
-      this.error(err)
+    } catch (error) {
+      this.error(error)
     }
   }
 
-  async readParametersFile(repoFolder) {
+  async readParametersFile (repoFolder) {
     // read the template.parameters.json file
     const paramsFileName = 'template.parameters.json'
     const paramsFile = path.join(repoFolder, paramsFileName)
 
     if (!(await fse.pathExists(paramsFile))) {
-      throw new Error(`${paramsFile} does not exist in ${templateUrl}`)
+      throw new Error(`${paramsFile} does not exist in ${repoFolder}`)
     }
 
     debug(`Read parameters file at ${paramsFile}`)
     return require(paramsFile)
   }
 
-  async updatePackageJson(repoFolder, repoName) {
+  async updatePackageJson (repoFolder, repoName) {
     const packageJsonFile = path.join(repoFolder, 'package.json')
 
     if (!(await fse.pathExists(packageJsonFile))) {
@@ -152,11 +153,11 @@ class CreateAioLibCommand extends Command {
     fse.writeJson(packageJsonFile, json, { spaces: 2 })
   }
 
-  async replaceText(repoFolder, paramsJson, libName, repoName) {
+  async replaceText (repoFolder, paramsJson, libName, repoName) {
     const toFrom = {
       '{{REPO}}': repoName,
       '{{LIB_NAME}}': libName,
-      'LibNameCoreAPI': libName
+      LibNameCoreAPI: libName
     }
 
     debug(`Replacement mapping: ${toFrom}`)
@@ -165,7 +166,7 @@ class CreateAioLibCommand extends Command {
       // add the path to the filenames
       const files = paramsJson[from].map(elem => path.join(repoFolder, elem))
       debug(`File list for ${from}: ${files}`)
-      
+
       // get the replacement string
       const to = toFrom[from]
       if (!to) {
@@ -179,7 +180,7 @@ class CreateAioLibCommand extends Command {
 
       // replace
       files.forEach(file => {
-        const contents = fse.readFileSync(file, "utf-8")
+        const contents = fse.readFileSync(file, 'utf-8')
         fse.writeFileSync(file, contents.replace(new RegExp(from, 'g'), to))
         debug(`Replaced ${from} to ${to} in ${file}`)
       })
@@ -187,7 +188,7 @@ class CreateAioLibCommand extends Command {
   }
 }
 
-CreateAioLibCommand.description = `Creates an AIO Lib`
+CreateAioLibCommand.description = 'Creates an AIO Lib'
 
 CreateAioLibCommand.flags = {
   version: flags.version({ char: 'v' }), // add --version flag to show CLI version
