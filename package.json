@@ -1,7 +1,7 @@
 {
   "name": "@adobe/create-aio-lib",
   "description": "Create an AIO Lib",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "author": "Adobe Inc.",
   "bin": {
     "create-aio-lib": "./bin/run"
