@@ -33,7 +33,7 @@ class CreateAioLibCommand extends Command {
       repoName = repoName.substring(1)
     }
 
-    if (fse.pathExistsSync(templateFolder) && !flags.overwrite) {
+    if (await fse.pathExists(templateFolder) && !flags.overwrite) {
       this.error(`Destination ${templateFolder} exists, use the '--overwrite' flag to overwrite.`)
     }
 
@@ -47,11 +47,11 @@ class CreateAioLibCommand extends Command {
     const steps = [
       {
         title: 'Copy template',
-        task: ctx => this.copyTemplate(ctx.templateFolder, ctx.overwrite)
+        task: async ctx => this.copyTemplate(ctx.templateFolder, ctx.overwrite)
       },
       {
         title: 'Remove .git folder',
-        task: ctx => this.removeDotGitFolder(ctx.templateFolder)
+        task: async ctx => this.removeDotGitFolder(ctx.templateFolder)
       },
       {
         title: 'Read parameters file',
@@ -99,7 +99,7 @@ class CreateAioLibCommand extends Command {
 
   async copyTemplate (toFolder, overwrite) {
     const from = path.join(__dirname, '../node_modules/@adobe/aio-lib-template')
-    fse.copy(from, toFolder, { overwrite, errorOnExist: !overwrite })
+    return fse.copy(from, toFolder, { overwrite, errorOnExist: !overwrite })
   }
 
   async cloneRepo (url, toFolder) {
@@ -117,12 +117,7 @@ class CreateAioLibCommand extends Command {
   async removeDotGitFolder (repoFolder) {
     // remove .git folder
     const dotGitFolder = path.join(repoFolder, '.git')
-    try {
-      await fse.remove(dotGitFolder)
-      debug(`Removed .git folder at ${dotGitFolder}`)
-    } catch (error) {
-      this.error(error)
-    }
+    return fse.remove(dotGitFolder)
   }
 
   async readParametersFile (repoFolder) {
@@ -131,7 +126,7 @@ class CreateAioLibCommand extends Command {
     const paramsFile = path.join(repoFolder, paramsFileName)
 
     if (!(await fse.pathExists(paramsFile))) {
-      throw new Error(`${paramsFile} does not exist in ${repoFolder}`)
+      throw new Error(`${paramsFileName} does not exist in ${repoFolder}`)
     }
 
     debug(`Read parameters file at ${paramsFile}`)
@@ -150,7 +145,12 @@ class CreateAioLibCommand extends Command {
     json.name = `@${repoName}`
     json.repository = `https://github.com/@${repoName}`
 
-    fse.writeJson(packageJsonFile, json, { spaces: 2 })
+    // get all underscored keys, and remove them
+    Object.keys(json)
+      .filter(key => key.startsWith('_'))
+      .forEach(key => delete json[key])
+
+    return fse.writeJson(packageJsonFile, json, { spaces: 2 })
   }
 
   async replaceText (repoFolder, paramsJson, libName, repoName) {
@@ -159,31 +159,47 @@ class CreateAioLibCommand extends Command {
       '{{LIB_NAME}}': libName,
       LibNameCoreAPI: libName
     }
-
     debug(`Replacement mapping: ${toFrom}`)
 
-    Object.keys(paramsJson).forEach(async from => {
-      // add the path to the filenames
-      const files = paramsJson[from].map(elem => path.join(repoFolder, elem))
-      debug(`File list for ${from}: ${files}`)
+    // Get all file paths into a set
+    const pathItemSet = Object.keys(paramsJson)
+      .reduce((set, key) => {
+        const values = paramsJson[key]
+        return new Set([...set, ...values])
+      }, new Set())
 
-      // get the replacement string
-      const to = toFrom[from]
-      if (!to) {
-        console.error(`No mapping found, skipping replace of ${from}`)
-        return
-      }
-
-      // escape curly braces
-      from = from.replace(/\{/g, '\\{').replace(/\}/g, '\\}')
-      debug(`Escaped token to ${from}`)
-
-      // replace
-      files.forEach(file => {
-        const contents = fse.readFileSync(file, 'utf-8')
-        fse.writeFileSync(file, contents.replace(new RegExp(from, 'g'), to))
-        debug(`Replaced ${from} to ${to} in ${file}`)
+    pathItemSet.forEach(async pathItem => {
+      // find the tokens for the file path
+      const tokens = []
+      Object.keys(paramsJson).forEach(token => {
+        if (paramsJson[token].includes(pathItem)) {
+          tokens.push(token)
+        }
       })
+
+      // read the file once
+      const filePath = path.join(repoFolder, pathItem)
+      let fileContents = await fse.readFile(filePath, 'utf-8')
+
+      // replace the tokens in the file
+      tokens.forEach(async from => {
+        const to = toFrom[from]
+        if (!to) {
+          console.error(`No mapping found, skipping replace of ${from}`)
+          return
+        }
+
+        // escape curly braces
+        from = from.replace(/\{/g, '\\{').replace(/\}/g, '\\}')
+        debug(`Escaped token to ${from}`)
+
+        fileContents = fileContents.replace(new RegExp(from, 'g'), to)
+      })
+
+      // write the altered file back
+      if (tokens.length > 0) {
+        await fse.writeFile(filePath, fileContents)
+      }
     })
   }
 }
