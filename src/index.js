@@ -31,8 +31,13 @@ class CreateAioLibCommand extends Command {
     // 3. For each file listed in the template.parameters.json file, we replace the token
     // 4. Print the location of the library
     const templateUrl = flags.templateUrl || "https://github.com/adobe/aio-lib-template.git"
-    const outputFolder = path.resolve(flags.outputDir) || process.cwd()
+    const outputFolder = flags.outputDir || process.cwd()
     const templateFolder = path.join(outputFolder, args.libName)
+
+    let repoName = args.repoName
+    if (repoName.startsWith('@')) {
+      repoName = repoName.substring(1)
+    }
 
     const tasks = new Listr([
       {
@@ -46,7 +51,13 @@ class CreateAioLibCommand extends Command {
       {
         title: "Read parameters file",
         task: async ctx => {
-          ctx.paramsJson = await this.readParametersFile(templateFolder)
+          ctx.paramsJson = await this.readParametersFile(ctx.templateFolder)
+        }
+      },
+      {
+        title: "Update package.json",
+        task: async ctx => {
+          await this.updatePackageJson(ctx.templateFolder, ctx.repoName)
         }
       },
       {
@@ -65,7 +76,7 @@ class CreateAioLibCommand extends Command {
       templateUrl,
       templateFolder,
       libName,
-      repoName: args.repoName
+      repoName
     })
   }
 
@@ -103,6 +114,21 @@ class CreateAioLibCommand extends Command {
 
     debug(`Read parameters file at ${paramsFile}`)
     return require(paramsFile)
+  }
+
+  async updatePackageJson(repoFolder, repoName) {
+    const packageJsonFile = path.join(repoFolder, 'package.json')
+
+    if (!fs.existsSync(packageJsonFile)) {
+      throw new Error(`${packageJsonFile} does not exist in ${repoFolder}`)
+    }
+
+    const json = require(packageJsonFile)
+    // replace name and repository fields
+    json.name = `@${repoName}`
+    json.repository = `https://github.com/@${repoName}`
+
+    fs.writeFileSync(packageJsonFile, JSON.stringify(json, null, 2))
   }
 
   async replaceText(repoFolder, paramsJson, libName, repoName) {
