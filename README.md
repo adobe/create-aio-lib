@@ -60,4 +60,5 @@ OPTIONS
   -o, --outputDir=outputDir      folder to output the library in (defaults to the current working folder)
   -t, --templateUrl=templateUrl  the template to use
   -v, --version                  show CLI version
+  -w, --overwrite                overwrite any existing output folder
   </pre>

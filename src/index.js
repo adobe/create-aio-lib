@@ -12,12 +12,11 @@ governing permissions and limitations under the License.
 const { Command, flags } = require('@oclif/command')
 const execa = require('execa');
 const Listr = require('listr');
-const rimraf = require('rimraf')
+const fse = require('fs-extra')
 const debug = require('debug')('create-aio-lib')
 const path = require('path')
 const git = require('isomorphic-git');
-const fs = require('fs');
-git.plugins.set('fs', fs)
+git.plugins.set('fs', fse)
 
 class CreateAioLibCommand extends Command {
   async run () {
@@ -26,23 +25,30 @@ class CreateAioLibCommand extends Command {
     const libName = args.libName[0].toUpperCase() + args.libName.substring(1)
     debug(`Capitalize '${args.libName}' --> '${libName}'`)
 
-    // 1. Download the template from a url (git)
-    // 2. Read the template.parameters.json file
-    // 3. For each file listed in the template.parameters.json file, we replace the token
-    // 4. Print the location of the library
-    const templateUrl = flags.templateUrl || "https://github.com/adobe/aio-lib-template.git"
+    const templateUrl = flags.templateUrl
     const outputFolder = flags.outputDir || process.cwd()
     const templateFolder = path.join(outputFolder, args.libName)
 
     let repoName = args.repoName
-    if (repoName.startsWith('@')) {
+    if (repoName.startsWith('@')) { // strip leading @
       repoName = repoName.substring(1)
     }
 
-    const tasks = new Listr([
+    if (fse.pathExistsSync(templateFolder) && !flags.overwrite) {
+      this.error(`Destination ${templateFolder} exists, use the '--overwrite' flag to overwrite.`)
+    } 
+
+    const cloneTemplateStep = {
+        task: (ctx, task) => {
+          task.title = `Cloning template from ${ctx.templateUrl}`
+          this.cloneRepo(ctx.templateUrl, ctx.templateFolder)
+        }
+    }
+
+    const steps = [
       {
-        title: "Cloning template",
-        task: ctx => this.cloneRepo(ctx.templateUrl, ctx.templateFolder)
+        title: 'Copy template',
+        task: ctx => this.copyTemplate(ctx.templateFolder, ctx.overwrite)
       },
       {
         title: "Remove .git folder",
@@ -61,7 +67,7 @@ class CreateAioLibCommand extends Command {
         }
       },
       {
-        title: "Replacing text",
+        title: "Replace text",
         task: ctx => this.replaceText(ctx.templateFolder, ctx.paramsJson, ctx.libName, ctx.repoName)
       },
       {
@@ -70,14 +76,29 @@ class CreateAioLibCommand extends Command {
           task.title = `Lib created at ${ctx.templateFolder}`
         }
       }
-    ])
+    ]
 
-    tasks.run({
-      templateUrl,
+    if (templateUrl) {
+      steps[0] = cloneTemplateStep
+    }
+
+    const tasks = new Listr(steps)
+    tasks
+    .run({
+      templateUrl: flags.templateUrl,
       templateFolder,
       libName,
-      repoName
+      repoName,
+      overwrite: flags.overwrite
     })
+    .catch(err => {
+      this.error(err.message);
+    })
+  }
+
+  async copyTemplate(toFolder, overwrite) {
+      const from = path.join(__dirname, '../node_modules/@adobe/aio-lib-template')
+      fse.copy(from, toFolder, { overwrite, errorOnExist: !overwrite })
   }
 
   async cloneRepo(url, toFolder) {
@@ -95,12 +116,12 @@ class CreateAioLibCommand extends Command {
   async removeDotGitFolder(repoFolder) {
     // remove .git folder
     const dotGitFolder = path.join(repoFolder, '.git')
-    rimraf(dotGitFolder, (err) => {
-      if (err) {
-        this.error(err)
-      } 
-    })
-    debug(`Removed .git folder at ${dotGitFolder}`)
+    try {
+      await fse.remove(dotGitFolder)
+      debug(`Removed .git folder at ${dotGitFolder}`)
+    } catch (err) {
+      this.error(err)
+    }
   }
 
   async readParametersFile(repoFolder) {
@@ -108,7 +129,7 @@ class CreateAioLibCommand extends Command {
     const paramsFileName = 'template.parameters.json'
     const paramsFile = path.join(repoFolder, paramsFileName)
 
-    if (!fs.existsSync(paramsFile)) {
+    if (!(await fse.pathExists(paramsFile))) {
       throw new Error(`${paramsFile} does not exist in ${templateUrl}`)
     }
 
@@ -119,16 +140,16 @@ class CreateAioLibCommand extends Command {
   async updatePackageJson(repoFolder, repoName) {
     const packageJsonFile = path.join(repoFolder, 'package.json')
 
-    if (!fs.existsSync(packageJsonFile)) {
+    if (!(await fse.pathExists(packageJsonFile))) {
       throw new Error(`${packageJsonFile} does not exist in ${repoFolder}`)
     }
 
-    const json = require(packageJsonFile)
+    const json = await fse.readJson(packageJsonFile)
     // replace name and repository fields
     json.name = `@${repoName}`
     json.repository = `https://github.com/@${repoName}`
 
-    fs.writeFileSync(packageJsonFile, JSON.stringify(json, null, 2))
+    fse.writeJson(packageJsonFile, json, { spaces: 2 })
   }
 
   async replaceText(repoFolder, paramsJson, libName, repoName) {
@@ -158,8 +179,8 @@ class CreateAioLibCommand extends Command {
 
       // replace
       files.forEach(file => {
-        const contents = fs.readFileSync(file, "utf-8")
-        fs.writeFileSync(file, contents.replace(new RegExp(from, 'g'), to))
+        const contents = fse.readFileSync(file, "utf-8")
+        fse.writeFileSync(file, contents.replace(new RegExp(from, 'g'), to))
         debug(`Replaced ${from} to ${to} in ${file}`)
       })
     })
@@ -172,7 +193,8 @@ CreateAioLibCommand.flags = {
   version: flags.version({ char: 'v' }), // add --version flag to show CLI version
   help: flags.help({ char: 'h' }), // add --help flag to show CLI help
   outputDir: flags.string({ char: 'o', description: 'folder to output the library in (defaults to the current working folder)' }),
-  templateUrl: flags.string({ char: 't', description: 'the template to use' })
+  templateUrl: flags.string({ char: 't', description: 'the template to use' }),
+  overwrite: flags.boolean({ char: 'w', default: false, description: 'overwrite any existing output folder' })
 }
 
 CreateAioLibCommand.args = [
