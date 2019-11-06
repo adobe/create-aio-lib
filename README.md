@@ -39,8 +39,7 @@ where `<library_name>` is the name of your library (this will create the folder 
 # Usage (cli)
 
 ```bash
-npm install -g @adobe/create-aio-lib
-create-aio-lib <library_name> <repo_name> [options]
+npx @adobe/create-aio-lib <library_name> <repo_name> [options]
 ```
 where `<library_name>` is the name of your library
 where `<repo_name>` is the scoped name of your repo
