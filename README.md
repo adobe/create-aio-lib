@@ -32,11 +32,9 @@ Make sure you have `npm` version `6.1.0` or greater:
 
 Then run:
 ```bash
-mkdir <library_name>
-cd <library_name>
 npm init @adobe/aio-lib <library_name> <repo_name> [options]
 ```
-where `<library_name>` is the name of your library
+where `<library_name>` is the name of your library (this will create the folder in the current working directory by default)
 
 # Usage (cli)
 
