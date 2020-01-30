@@ -24,6 +24,15 @@ CLI tool to create AIO Libs
 
 This uses [this template.](https://github.com/adobe/aio-lib-template)
 
+<!-- toc -->
+* [Usage (npm)](#usage-npm)
+* [Usage (cli)](#usage-cli)
+* [Commands](#commands)
+* [Contributing](#contributing)
+* [Licensing](#licensing)
+<!-- tocstop -->
+
+
 # Usage (npm)
 
 Make sure you have `npm` version `6.1.0` or greater:
@@ -44,7 +53,7 @@ npx @adobe/create-aio-lib <library_name> <repo_name> [options]
 where `<library_name>` is the name of your library
 where `<repo_name>` is the scoped name of your repo
 
-# Commands and flags
+# Command
 <pre>
 Creates an AIO Lib
 
@@ -57,8 +66,25 @@ ARGUMENTS
 
 OPTIONS
   -h, --help                     show CLI help
-  -o, --outputDir=outputDir      folder to output the library in (defaults to the current working folder)
+
+  -o, --outputDir=outputDir      folder to output the library in (defaults to
+                                 the current working folder)
+
   -t, --templateUrl=templateUrl  the template to use
+
   -v, --version                  show CLI version
+
   -w, --overwrite                overwrite any existing output folder
-  </pre>
+
+DESCRIPTION
+  Example:
+       create-aio-lib MyLibClass myOrg/myRepo
+</pre>
+
+# Contributing
+Contributions are welcomed! Read the [Contributing Guide](.github/CONTRIBUTING.md) for more information.
+
+
+# Licensing
+
+This project is licensed under the Apache V2 License. See [LICENSE](LICENSE) for more information.

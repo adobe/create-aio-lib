@@ -72,6 +72,10 @@ class CreateAioLibCommand extends Command {
         task: ctx => this.replaceText(ctx.templateFolder, ctx.paramsJson, ctx.libName, ctx.repoName)
       },
       {
+        title: 'Cleanup',
+        task: ctx => this.cleanup(ctx.templateFolder)
+      },
+      {
         title: 'Lib Location',
         task: (ctx, task) => {
           task.title = `Lib created at ${ctx.templateFolder}`
@@ -141,9 +145,14 @@ class CreateAioLibCommand extends Command {
     }
 
     const json = await fse.readJson(packageJsonFile)
+    json.bugs = json.bugs || {}
+
     // replace name and repository fields
     json.name = `@${repoName}`
     json.repository = `https://github.com/@${repoName}`
+    json.homepage = `https://github.com/@${repoName}`
+    json.bugs.url = `https://github.com/@${repoName}/issues`
+    json.version = '0.0.1'
 
     // get all underscored keys, and remove them
     Object.keys(json)
@@ -151,6 +160,14 @@ class CreateAioLibCommand extends Command {
       .forEach(key => delete json[key])
 
     return fse.writeJson(packageJsonFile, json, { spaces: 2 })
+  }
+
+  async cleanup (repoFolder) {
+    const filesToRemove = ['types.d.ts', 'template.parameters.json']
+
+    filesToRemove
+      .map(file => path.join(repoFolder, file))
+      .forEach(filePath => fse.remove(filePath))
   }
 
   async replaceText (repoFolder, paramsJson, libName, repoName) {
@@ -204,7 +221,11 @@ class CreateAioLibCommand extends Command {
   }
 }
 
-CreateAioLibCommand.description = 'Creates an AIO Lib'
+CreateAioLibCommand.description = `Creates an AIO Lib
+
+Example:
+    create-aio-lib MyLibClass myOrg/myRepo
+`
 
 CreateAioLibCommand.flags = {
   version: flags.version({ char: 'v' }), // add --version flag to show CLI version
