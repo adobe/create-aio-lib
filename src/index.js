@@ -168,6 +168,17 @@ class CreateAioLibCommand extends Command {
     filesToRemove
       .map(file => path.join(repoFolder, file))
       .forEach(filePath => fse.remove(filePath))
+
+    const filesToRename = {
+      'gitignore.template': '.gitignore',
+      'npmrc.template': '.npmrc'
+    }
+
+    Object.keys(filesToRename)
+      .forEach(key => {
+        const value = filesToRename[key]
+        fse.move(path.join(repoFolder, key), path.join(repoFolder, value))
+      })
   }
 
   async replaceText (repoFolder, paramsJson, libName, repoName) {
