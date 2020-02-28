@@ -15,7 +15,6 @@ const fse = require('fs-extra')
 const debug = require('debug')('create-aio-lib')
 const path = require('path')
 const git = require('isomorphic-git')
-git.plugins.set('fs', fse)
 
 class CreateAioLibCommand extends Command {
   async run () {
@@ -108,6 +107,7 @@ class CreateAioLibCommand extends Command {
 
   async cloneRepo (url, toFolder) {
     const cloneOptions = {
+      fs: fse,
       dir: toFolder,
       url: url,
       singleBranch: true,
