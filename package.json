@@ -11,7 +11,7 @@
     "@adobe/aio-lib-template": "^1.2.0",
     "@oclif/command": "^1.5.19",
     "@oclif/config": "^1.13.3",
-    "@oclif/plugin-help": "^2.2.1",
+    "@oclif/plugin-help": "^3.0.0",
     "debug": "^4.1.1",
     "fs-extra": "^9.0.0",
     "isomorphic-git": "^1.0.0",
