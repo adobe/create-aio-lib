@@ -9,8 +9,8 @@ OF ANY KIND, either express or implied. See the License for the specific languag
 governing permissions and limitations under the License.
 */
 
-const { Command, flags } = require('@oclif/command')
-const Listr = require('listr')
+const { Command, Flags } = require('@oclif/core')
+const { Listr } = require('listr2')
 const fse = require('fs-extra')
 const debug = require('debug')('create-aio-lib')
 const path = require('path')
@@ -18,9 +18,9 @@ const git = require('isomorphic-git')
 
 class CreateAioLibCommand extends Command {
   async run () {
-    const { args, flags } = this.parse(CreateAioLibCommand)
+    const { args, flags } = await this.parse(CreateAioLibCommand)
     // capitalize first letter of the lib name
-    const libName = args.libName[0].toUpperCase() + args.libName.substring(1)
+    const libName = args.libName[0].toUpperCase() + args.libName.slice(1)
     debug(`Capitalize '${args.libName}' --> '${libName}'`)
 
     const templateUrl = flags.templateUrl
@@ -29,7 +29,7 @@ class CreateAioLibCommand extends Command {
 
     let repoName = args.repoName
     if (repoName.startsWith('@')) { // strip leading @
-      repoName = repoName.substring(1)
+      repoName = repoName.slice(1)
     }
 
     if (await fse.pathExists(templateFolder) && !flags.overwrite) {
@@ -56,7 +56,7 @@ class CreateAioLibCommand extends Command {
         title: 'Read parameters file',
         task: async ctx => {
           // false positive for eslint rule
-          // eslint-disable-next-line require-atomic-updates
+
           ctx.paramsJson = await this.readParametersFile(ctx.templateFolder)
         }
       },
@@ -101,7 +101,7 @@ class CreateAioLibCommand extends Command {
   }
 
   async copyTemplate (toFolder, overwrite) {
-    const from = path.join(__dirname, '../node_modules/@adobe/aio-lib-template')
+    const from = path.join(__dirname, '../../node_modules/@adobe/aio-lib-template')
     return fse.copy(from, toFolder, { overwrite, errorOnExist: !overwrite })
   }
 
@@ -109,7 +109,7 @@ class CreateAioLibCommand extends Command {
     const cloneOptions = {
       fs: fse,
       dir: toFolder,
-      url: url,
+      url,
       singleBranch: true,
       depth: 1
     }
@@ -155,9 +155,8 @@ class CreateAioLibCommand extends Command {
     json.version = '0.0.1'
 
     // get all underscored keys, and remove them
-    Object.keys(json)
-      .filter(key => key.startsWith('_'))
-      .forEach(key => delete json[key])
+    for (const key of Object.keys(json)
+      .filter(key => key.startsWith('_'))) delete json[key]
 
     return fse.writeJson(packageJsonFile, json, { spaces: 2 })
   }
@@ -165,20 +164,18 @@ class CreateAioLibCommand extends Command {
   async cleanup (repoFolder) {
     const filesToRemove = ['types.d.ts', 'template.parameters.json']
 
-    filesToRemove
-      .map(file => path.join(repoFolder, file))
-      .forEach(filePath => fse.remove(filePath))
+    for (const filePath of filesToRemove
+      .map(file => path.join(repoFolder, file))) fse.remove(filePath)
 
     const filesToRename = {
       'gitignore.template': '.gitignore',
       'npmrc.template': '.npmrc'
     }
 
-    Object.keys(filesToRename)
-      .forEach(key => {
-        const value = filesToRename[key]
-        fse.move(path.join(repoFolder, key), path.join(repoFolder, value))
-      })
+    for (const key of Object.keys(filesToRename)) {
+      const value = filesToRename[key]
+      fse.move(path.join(repoFolder, key), path.join(repoFolder, value))
+    }
   }
 
   async replaceText (repoFolder, paramsJson, libName, repoName) {
@@ -191,25 +188,27 @@ class CreateAioLibCommand extends Command {
 
     // Get all file paths into a set
     const pathItemSet = Object.keys(paramsJson)
-      .reduce((set, key) => {
+      .reduce((set, key) => { // eslint-disable-line unicorn/no-array-reduce
         const values = paramsJson[key]
         return new Set([...set, ...values])
       }, new Set())
 
+    // eslint-disable-next-line unicorn/no-array-for-each
     pathItemSet.forEach(async pathItem => {
       // find the tokens for the file path
       const tokens = []
-      Object.keys(paramsJson).forEach(token => {
+      for (const token of Object.keys(paramsJson)) {
         if (paramsJson[token].includes(pathItem)) {
           tokens.push(token)
         }
-      })
+      }
 
       // read the file once
       const filePath = path.join(repoFolder, pathItem)
-      let fileContents = await fse.readFile(filePath, 'utf-8')
+      let fileContents = await fse.readFile(filePath, 'utf8')
 
       // replace the tokens in the file
+      // eslint-disable-next-line unicorn/no-array-for-each
       tokens.forEach(async from => {
         const to = toFrom[from]
         if (!to) {
@@ -218,7 +217,7 @@ class CreateAioLibCommand extends Command {
         }
 
         // escape curly braces
-        from = from.replace(/\{/g, '\\{').replace(/\}/g, '\\}')
+        from = from.replace(/{/g, '\\{').replace(/}/g, '\\}')
         debug(`Escaped token to ${from}`)
 
         fileContents = fileContents.replace(new RegExp(from, 'g'), to)
@@ -232,18 +231,18 @@ class CreateAioLibCommand extends Command {
   }
 }
 
-CreateAioLibCommand.description = `Creates an AIO Lib
+CreateAioLibCommand.description = `Creates an Adobe I/O Lib
 
 Example:
     create-aio-lib MyLibClass myOrg/myRepo
 `
 
 CreateAioLibCommand.flags = {
-  version: flags.version({ char: 'v' }), // add --version flag to show CLI version
-  help: flags.help({ char: 'h' }), // add --help flag to show CLI help
-  outputDir: flags.string({ char: 'o', description: 'folder to output the library in (defaults to the current working folder)' }),
-  templateUrl: flags.string({ char: 't', description: 'the template to use' }),
-  overwrite: flags.boolean({ char: 'w', default: false, description: 'overwrite any existing output folder' })
+  version: Flags.version({ char: 'v' }), // add --version flag to show CLI version
+  help: Flags.help({ char: 'h' }), // add --help flag to show CLI help
+  outputDir: Flags.string({ char: 'o', description: 'folder to output the library in (defaults to the current working folder)' }),
+  templateUrl: Flags.string({ char: 't', description: 'the template to use' }),
+  overwrite: Flags.boolean({ char: 'w', default: false, description: 'overwrite any existing output folder' })
 }
 
 CreateAioLibCommand.args = [
