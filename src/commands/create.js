@@ -1,3 +1,4 @@
+/* eslint-disable unicorn/prefer-module */
 /*
 Copyright 2019 Adobe. All rights reserved.
 This file is licensed to you under the Apache License, Version 2.0 (the "License");
@@ -101,7 +102,8 @@ class CreateAioLibCommand extends Command {
   }
 
   async copyTemplate (toFolder, overwrite) {
-    const from = path.join(__dirname, '../../node_modules/@adobe/aio-lib-template')
+    // will only work if the module is CommonJs (unless for ESM package.json is exported) - finds the module root path
+    const from = path.dirname(require.resolve('@adobe/aio-lib-template/package.json'))
     return fse.copy(from, toFolder, { overwrite, errorOnExist: !overwrite })
   }
 
