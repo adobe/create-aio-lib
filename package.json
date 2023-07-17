@@ -10,7 +10,7 @@
   "dependencies": {
     "@adobe/aio-lib-template": "^1.2.4",
     "@oclif/config": "^1.18.3",
-    "@oclif/core": "^1.9.0",
+    "@oclif/core": "^2.9.3",
     "@oclif/plugin-version": "^1.0.4",
     "debug": "^4.2.0",
     "fs-extra": "^9.0.0",
