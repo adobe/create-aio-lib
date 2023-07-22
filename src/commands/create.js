@@ -12,7 +12,7 @@ governing permissions and limitations under the License.
 
 const { Command, Flags } = require('@oclif/core')
 const { Listr } = require('listr2')
-const fse = require('fs-extra')
+const fs = require('fs-extra')
 const debug = require('debug')('create-aio-lib')
 const path = require('path')
 const git = require('isomorphic-git')
@@ -33,7 +33,7 @@ class CreateAioLibCommand extends Command {
       repoName = repoName.slice(1)
     }
 
-    if (await fse.pathExists(templateFolder) && !flags.overwrite) {
+    if (await fs.pathExists(templateFolder) && !flags.overwrite) {
       this.error(`Destination ${templateFolder} exists, use the '--overwrite' flag to overwrite.`)
     }
 
@@ -104,12 +104,12 @@ class CreateAioLibCommand extends Command {
   async copyTemplate (toFolder, overwrite) {
     // will only work if the module is CommonJs (unless for ESM package.json is exported) - finds the module root path
     const from = path.dirname(require.resolve('@adobe/aio-lib-template/package.json'))
-    return fse.copy(from, toFolder, { overwrite, errorOnExist: !overwrite })
+    return fs.copy(from, toFolder, { overwrite, errorOnExist: !overwrite })
   }
 
   async cloneRepo (url, toFolder) {
     const cloneOptions = {
-      fs: fse,
+      fs,
       dir: toFolder,
       url,
       singleBranch: true,
@@ -123,7 +123,7 @@ class CreateAioLibCommand extends Command {
   async removeDotGitFolder (repoFolder) {
     // remove .git folder
     const dotGitFolder = path.join(repoFolder, '.git')
-    return fse.remove(dotGitFolder)
+    return fs.remove(dotGitFolder)
   }
 
   async readParametersFile (repoFolder) {
@@ -131,7 +131,7 @@ class CreateAioLibCommand extends Command {
     const paramsFileName = 'template.parameters.json'
     const paramsFile = path.join(repoFolder, paramsFileName)
 
-    if (!(await fse.pathExists(paramsFile))) {
+    if (!(await fs.pathExists(paramsFile))) {
       throw new Error(`${paramsFileName} does not exist in ${repoFolder}`)
     }
 
@@ -140,13 +140,14 @@ class CreateAioLibCommand extends Command {
   }
 
   async updatePackageJson (repoFolder, repoName) {
+    console.log(`Updating package.json in ${repoFolder} with ${repoName}`)
     const packageJsonFile = path.join(repoFolder, 'package.json')
 
-    if (!(await fse.pathExists(packageJsonFile))) {
+    if (!(await fs.pathExists(packageJsonFile))) {
       throw new Error(`${packageJsonFile} does not exist in ${repoFolder}`)
     }
 
-    const json = await fse.readJson(packageJsonFile)
+    const json = await fs.readJson(packageJsonFile)
     json.bugs = json.bugs || {}
 
     // replace name and repository fields
@@ -160,14 +161,14 @@ class CreateAioLibCommand extends Command {
     for (const key of Object.keys(json)
       .filter(key => key.startsWith('_'))) delete json[key]
 
-    return fse.writeJson(packageJsonFile, json, { spaces: 2 })
+    return fs.writeJson(packageJsonFile, json, { spaces: 2 })
   }
 
   async cleanup (repoFolder) {
     const filesToRemove = ['types.d.ts', 'template.parameters.json']
 
     for (const filePath of filesToRemove
-      .map(file => path.join(repoFolder, file))) fse.remove(filePath)
+      .map(file => path.join(repoFolder, file))) fs.remove(filePath)
 
     const filesToRename = {
       'gitignore.template': '.gitignore',
@@ -176,7 +177,7 @@ class CreateAioLibCommand extends Command {
 
     for (const key of Object.keys(filesToRename)) {
       const value = filesToRename[key]
-      fse.move(path.join(repoFolder, key), path.join(repoFolder, value))
+      fs.move(path.join(repoFolder, key), path.join(repoFolder, value),{ overwrite: true })
     }
   }
 
@@ -207,7 +208,7 @@ class CreateAioLibCommand extends Command {
 
       // read the file once
       const filePath = path.join(repoFolder, pathItem)
-      let fileContents = await fse.readFile(filePath, 'utf8')
+      let fileContents = await fs.readFile(filePath, 'utf8')
 
       // replace the tokens in the file
       // eslint-disable-next-line unicorn/no-array-for-each
@@ -227,7 +228,7 @@ class CreateAioLibCommand extends Command {
 
       // write the altered file back
       if (tokens.length > 0) {
-        await fse.writeFile(filePath, fileContents)
+        await fs.writeFile(filePath, fileContents)
       }
     })
   }
