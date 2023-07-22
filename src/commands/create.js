@@ -177,7 +177,7 @@ class CreateAioLibCommand extends Command {
 
     for (const key of Object.keys(filesToRename)) {
       const value = filesToRename[key]
-      fs.move(path.join(repoFolder, key), path.join(repoFolder, value),{ overwrite: true })
+      fs.move(path.join(repoFolder, key), path.join(repoFolder, value), { overwrite: true })
     }
   }
 
