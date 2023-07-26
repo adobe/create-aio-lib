@@ -9,8 +9,7 @@
   "bugs": "https://github.com/adobe/create-aio-lib/issues",
   "dependencies": {
     "@adobe/aio-lib-template": "^1.2.4",
-    "@oclif/config": "^1.18.3",
-    "@oclif/core": "^1.9.0",
+    "@oclif/core": "^2",
     "@oclif/plugin-version": "^1.0.4",
     "debug": "^4.2.0",
     "fs-extra": "^9.0.0",
@@ -18,7 +17,6 @@
     "listr2": "^6.6.0"
   },
   "devDependencies": {
-    "@oclif/dev-cli": "^1.26.10",
     "eslint": "^8",
     "eslint-config-oclif": "^4",
     "eslint-config-standard": "^17.0.0",

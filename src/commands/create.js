@@ -10,7 +10,7 @@ OF ANY KIND, either express or implied. See the License for the specific languag
 governing permissions and limitations under the License.
 */
 
-const { Command, Flags } = require('@oclif/core')
+const { Command, Flags, Args } = require('@oclif/core')
 const { Listr } = require('listr2')
 const fs = require('fs-extra')
 const debug = require('debug')('create-aio-lib')
@@ -44,44 +44,36 @@ class CreateAioLibCommand extends Command {
       }
     }
 
-    const steps = [
-      {
-        title: 'Copy template',
-        task: async ctx => this.copyTemplate(ctx.templateFolder, ctx.overwrite)
-      },
-      {
-        title: 'Remove .git folder',
-        task: async ctx => this.removeDotGitFolder(ctx.templateFolder)
-      },
-      {
-        title: 'Read parameters file',
-        task: async ctx => {
-          // false positive for eslint rule
+    const steps = [{
+      title: 'Copy template',
+      task: async ctx => this.copyTemplate(ctx.templateFolder, ctx.overwrite)
+    }, {
+      title: 'Remove .git folder',
+      task: async ctx => this.removeDotGitFolder(ctx.templateFolder)
+    }, {
+      title: 'Read parameters file',
+      task: async ctx => {
+        // false positive for eslint rule
 
-          ctx.paramsJson = await this.readParametersFile(ctx.templateFolder)
-        }
-      },
-      {
-        title: 'Update package.json',
-        task: async ctx => {
-          await this.updatePackageJson(ctx.templateFolder, ctx.repoName)
-        }
-      },
-      {
-        title: 'Replace text',
-        task: ctx => this.replaceText(ctx.templateFolder, ctx.paramsJson, ctx.libName, ctx.repoName)
-      },
-      {
-        title: 'Cleanup',
-        task: ctx => this.cleanup(ctx.templateFolder)
-      },
-      {
-        title: 'Lib Location',
-        task: (ctx, task) => {
-          task.title = `Lib created at ${ctx.templateFolder}`
-        }
+        ctx.paramsJson = await this.readParametersFile(ctx.templateFolder)
       }
-    ]
+    }, {
+      title: 'Update package.json',
+      task: async ctx => {
+        await this.updatePackageJson(ctx.templateFolder, ctx.repoName)
+      }
+    }, {
+      title: 'Replace text',
+      task: ctx => this.replaceText(ctx.templateFolder, ctx.paramsJson, ctx.libName, ctx.repoName)
+    }, {
+      title: 'Cleanup',
+      task: ctx => this.cleanup(ctx.templateFolder)
+    }, {
+      title: 'Lib Location',
+      task: (ctx, task) => {
+        task.title = `Lib created at ${ctx.templateFolder}`
+      }
+    }]
 
     if (templateUrl) {
       steps[0] = cloneTemplateStep
@@ -151,15 +143,27 @@ class CreateAioLibCommand extends Command {
     json.bugs = json.bugs || {}
 
     // replace name and repository fields
-    json.name = `@${repoName}`
-    json.repository = `https://github.com/@${repoName}`
-    json.homepage = `https://github.com/@${repoName}`
-    json.bugs.url = `https://github.com/@${repoName}/issues`
+    // deal with scoped packages specially
+    if (repoName.indexOf('/') > 0) {
+      json.name = `@${repoName}`
+      json.repository = `https://github.com/${repoName}`
+      json.homepage = `https://github.com/${repoName}`
+      json.bugs.url = `https://github.com/${repoName}/issues`
+    } else {
+      json.name = repoName
+      delete json.repository
+      delete json.homepage
+      delete json.bugs
+    }
+
     json.version = '0.0.1'
 
     // get all underscored keys, and remove them
-    for (const key of Object.keys(json)
-      .filter(key => key.startsWith('_'))) delete json[key]
+    for (const key of Object.keys(json)) {
+      if (key.startsWith('_')) {
+        delete json[key]
+      }
+    }
 
     return fs.writeJson(packageJsonFile, json, { spaces: 2 })
   }
@@ -211,6 +215,7 @@ class CreateAioLibCommand extends Command {
       let fileContents = await fs.readFile(filePath, 'utf8')
 
       // replace the tokens in the file
+      console.log('tokens', tokens)
       // eslint-disable-next-line unicorn/no-array-for-each
       tokens.forEach(async from => {
         const to = toFrom[from]
@@ -252,5 +257,10 @@ CreateAioLibCommand.args = [
   { name: 'libName', required: true, description: 'the name of the library' },
   { name: 'repoName', required: true, description: 'the repo of the library' }
 ]
+
+CreateAioLibCommand.args = {
+  libName: Args.string({ required: true, description: 'the name of the library' }),
+  repoName: Args.string({ required: true, description: 'the repo of the library' })
+}
 
 module.exports = CreateAioLibCommand
