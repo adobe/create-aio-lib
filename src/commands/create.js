@@ -1,4 +1,3 @@
-/* eslint-disable unicorn/prefer-module */
 /*
 Copyright 2019 Adobe. All rights reserved.
 This file is licensed to you under the Apache License, Version 2.0 (the "License");
@@ -195,12 +194,11 @@ class CreateAioLibCommand extends Command {
 
     // Get all file paths into a set
     const pathItemSet = Object.keys(paramsJson)
-      .reduce((set, key) => { // eslint-disable-line unicorn/no-array-reduce
+      .reduce((set, key) => {
         const values = paramsJson[key]
         return new Set([...set, ...values])
       }, new Set())
 
-    // eslint-disable-next-line unicorn/no-array-for-each
     pathItemSet.forEach(async pathItem => {
       // find the tokens for the file path
       const tokens = []
@@ -216,7 +214,6 @@ class CreateAioLibCommand extends Command {
 
       // replace the tokens in the file
       console.log('tokens', tokens)
-      // eslint-disable-next-line unicorn/no-array-for-each
       tokens.forEach(async from => {
         const to = toFrom[from]
         if (!to) {
