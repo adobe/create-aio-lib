@@ -17,7 +17,7 @@
     "listr2": "^6.6.0"
   },
   "devDependencies": {
-    "@adobe/eslint-config-aio-lib-config": "^2.0.1",
+    "@adobe/eslint-config-aio-lib-config": "^2.0.2",
     "eslint": "^8.47.0",
     "eslint-config-oclif": "^4",
     "eslint-config-standard": "^17.1.0",
