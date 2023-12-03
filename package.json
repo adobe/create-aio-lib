@@ -32,7 +32,8 @@
     "eslint-plugin-promise": "^6.1.1",
     "jest": "^29.7.0",
     "mocha": "^10.2.0",
-    "typescript": "^5.1.6"
+    "typescript": "^5.1.6",
+    "nyc": "^15.1.0"
   },
   "files": [
     "/bin",
@@ -55,6 +56,6 @@
   "repository": "adobe/create-aio-lib",
   "scripts": {
     "lint": "eslint .",
-    "test": "mocha tests/unit"
+    "test": "mocha tests/unit && npm run lint"
   }
 }
