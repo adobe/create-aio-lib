@@ -29,6 +29,7 @@ jobs:
     - run: npm ci
     - run: npm run build --if-present
     - run: npm run test -- --reporter mocha-junit-reporter
+    - run: npm run test:lint
     - run: npx nyc --reporter=lcov npm test
     - name: upload coverage
       if: success()

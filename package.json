@@ -56,6 +56,7 @@
   "repository": "adobe/create-aio-lib",
   "scripts": {
     "lint": "eslint .",
-    "test": "mocha tests/unit && npm run lint"
+    "test": "mocha tests/unit",
+    "test:lint": "npm run lint"
   }
 }
