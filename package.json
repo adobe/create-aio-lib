@@ -10,12 +10,12 @@
   "dependencies": {
     "@adobe/aio-lib-template": "^1.2.4",
     "@oclif/core": "^2",
-    "@oclif/plugin-version": "^1.0.4",
+    "@oclif/plugin-version": "^2.0.6",
     "chai-as-promised": "^7.1.1",
     "debug": "^4.2.0",
     "fs-extra": "^11.1.1",
     "isomorphic-git": "^1.8.2",
-    "listr2": "^6.6.0",
+    "listr2": "^7.0.2",
     "sinon": "^17.0.1"
   },
   "devDependencies": {
