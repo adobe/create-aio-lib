@@ -8,7 +8,7 @@
   },
   "bugs": "https://github.com/adobe/create-aio-lib/issues",
   "dependencies": {
-    "@adobe/aio-lib-template": "^1.2.4",
+    "@adobe/aio-lib-template": "^2.0.1",
     "@oclif/core": "^2",
     "@oclif/plugin-version": "^2.0.6",
     "debug": "^4.2.0",
