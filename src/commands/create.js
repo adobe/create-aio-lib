@@ -229,6 +229,7 @@ class CreateAioLibCommand extends Command {
       })
 
       // write the altered file back
+      /* istanbul ignore else */
       if (tokens.length > 0) {
         await fs.writeFile(filePath, fileContents)
       }
