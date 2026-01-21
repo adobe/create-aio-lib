@@ -51,6 +51,7 @@
   "repository": "adobe/create-aio-lib",
   "scripts": {
     "lint": "eslint .",
-    "test": "npm run lint"
+    "unit-tests": "jest --coverage",
+    "test": "npm run lint && npm run unit-tests"
   }
 }

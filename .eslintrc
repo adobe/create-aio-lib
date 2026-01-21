@@ -1,3 +1,4 @@
 {
+  "root": true,
   "extends": "@adobe/eslint-config-aio-lib-config"
 }

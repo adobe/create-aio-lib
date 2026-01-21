@@ -1,0 +1,4 @@
+{
+  "{{REPO}}": ["file1.js", "file2.js"],
+  "{{LIB_NAME}}": ["file1.js", "file3.js"]
+}
