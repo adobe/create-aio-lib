@@ -53,5 +53,8 @@
     "lint": "eslint .",
     "unit-tests": "jest --coverage",
     "test": "npm run lint && npm run unit-tests"
+  },
+  "engines": {
+    "node": ">=20"
   }
 }
